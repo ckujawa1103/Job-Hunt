@@ -20,13 +20,12 @@ config, logging**.
    visibility changes: **Settings -> General -> Danger Zone -> Change
    visibility -> Make private**. That hides the history too. (Nothing secret
    was committed — no keys, no tokens.)
-2. **There is no `main` branch.** The repository's default branch is
-   `claude/new-session-rdnh0e` and `main` does not exist, so the push-to-deploy
-   path in DEPLOY.md has nothing to trigger on. Either merge this branch into a
-   new `main` and make `main` the default, or say so and the workflow can key
-   off a different branch. Until then the Deploy workflow can still be run by
-   hand from the Actions tab on any branch (**Actions -> Deploy -> Run
-   workflow**), which is how step 5 of DEPLOY.md works today.
+2. **Make `main` the default branch.** `main` now exists and carries the same
+   history, and the Deploy workflow deploys on every push to it. One setting is
+   left, and it needs a human: **Settings -> General -> Default branch ->
+   switch to `main`**. Until that flip, `main` is still a normal branch — pushes
+   to it deploy correctly, but new branches and clones start from
+   `claude/new-session-rdnh0e`.
 
 ## Do these by hand (nothing else is blocked on me)
 
@@ -46,8 +45,8 @@ list:
 5. **Add two repository secrets** under Settings -> Secrets and variables ->
    Actions: `CLASPRC_JSON` (the file contents from step 4) and `SCRIPT_ID`
    (from step 2).
-6. **Push to `main`** — see item 2 above; for now, run **Actions -> Deploy ->
-   Run workflow** by hand — and confirm the workflow is green.
+6. **Push to `main`** and confirm the Deploy workflow is green. (A manual
+   **Actions -> Deploy -> Run workflow** from any branch works too.)
 7. **Run `setupSheet` once** from the Apps Script editor and approve the OAuth
    consent screen. Confirm the five tabs appear, Config is filled in and
    Companies lists 24 rows at `verified=N`.
@@ -102,6 +101,10 @@ two switches later sessions expect (`ENABLED`, `SEND_EMPTY_DIGEST`).
   services are stubbed to throw), and anything touching a Google service is
   checked by running `runAllTests` from the editor by hand. Revisit in session 7
   if the by-hand step gets annoying.
+- **`main` is the deploy branch; work happens on `claude/new-session-rdnh0e`.**
+  Each session's commits land on the working branch and are then
+  fast-forwarded onto `main`, which is what `clasp push` deploys from. The two
+  are the same commit unless a push is deliberately held back.
 - **Jobs columns live in `src/setup.js` for now.** Session 1 creates
   `src/schema.js`; move the column list there and have `sheetSpecs_()` read it,
   so there is one definition. Appending a column later is safe — `setupSheet()`

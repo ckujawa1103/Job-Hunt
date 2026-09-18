@@ -62,7 +62,8 @@ Neither file is ever committed (`.gitignore` blocks both).
 ## 5. First deploy
 
 Push anything to `main` (or run the **Deploy** workflow by hand from the
-Actions tab). Watch the run:
+Actions tab -> **Deploy** -> **Run workflow**, which works from any branch).
+Watch the run:
 
 - **Checks** must be green: syntax check, companies-seed drift check, tests.
 - **clasp push** should report the files it pushed.
