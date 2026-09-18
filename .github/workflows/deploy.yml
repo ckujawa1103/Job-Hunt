@@ -34,11 +34,26 @@ jobs:
         with:
           node-version: '20'
 
+      # Both secrets absent means the one-time setup in docs/DEPLOY.md has not
+      # been done yet: skip the push cleanly so main does not sit red. Once
+      # either secret exists a half-configured deploy is a real failure.
       - name: Check deploy secrets are set
+        id: secrets
         env:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
           SCRIPT_ID: ${{ secrets.SCRIPT_ID }}
         run: |
+          if [ -z "$CLASPRC_JSON" ] && [ -z "$SCRIPT_ID" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Deploy skipped - CLASPRC_JSON and SCRIPT_ID are not set yet."
+            {
+              echo "### Deploy skipped"
+              echo
+              echo "\`CLASPRC_JSON\` and \`SCRIPT_ID\` are not set, so there is nothing to push to."
+              echo "Follow steps 1-4 of [docs/DEPLOY.md](docs/DEPLOY.md) once, then re-run this workflow."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           missing=""
           [ -n "$CLASPRC_JSON" ] || missing="$missing CLASPRC_JSON"
           [ -n "$SCRIPT_ID" ] || missing="$missing SCRIPT_ID"
@@ -47,11 +62,14 @@ jobs:
             echo "See docs/DEPLOY.md for how to create them."
             exit 1
           fi
+          echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - name: Install clasp
+        if: steps.secrets.outputs.ready == 'true'
         run: npm install -g @google/clasp@2.4.2
 
       - name: Write clasp credentials
+        if: steps.secrets.outputs.ready == 'true'
         env:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
           SCRIPT_ID: ${{ secrets.SCRIPT_ID }}
@@ -60,6 +78,7 @@ jobs:
           printf '{"scriptId":"%s","rootDir":"."}' "$SCRIPT_ID" > .clasp.json
 
       - name: Push to Apps Script
+        if: steps.secrets.outputs.ready == 'true'
         run: clasp push --force
 
       - name: Remove credentials

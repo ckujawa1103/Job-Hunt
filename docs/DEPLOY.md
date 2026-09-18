@@ -68,6 +68,11 @@ Watch the run:
 - **Checks** must be green: syntax check, companies-seed drift check, tests.
 - **clasp push** should report the files it pushed.
 
+Before the two secrets exist, the **clasp push** job skips itself with a
+"Deploy skipped" note in the run summary rather than failing, so `main` is not
+red while you work through the setup above. Once either secret is set, a
+missing one is a real failure.
+
 If `clasp push` fails with `User has not enabled the Apps Script API`, redo
 step 2. If it fails with an auth error, redo step 3 — the refresh token in
 `CLASPRC_JSON` was revoked or replaced.
