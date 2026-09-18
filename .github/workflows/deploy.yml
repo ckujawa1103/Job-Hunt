@@ -1,0 +1,66 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  checks:
+    name: Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax-check every Apps Script file
+        run: find src -name '*.js' -print -exec node --check {} \;
+      - name: Companies seed matches the CSV
+        run: node tools/gen_companies.js --check
+      - name: Run tests
+        run: node tools/run_tests.js
+
+  deploy:
+    name: clasp push
+    needs: checks
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check deploy secrets are set
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+          SCRIPT_ID: ${{ secrets.SCRIPT_ID }}
+        run: |
+          missing=""
+          [ -n "$CLASPRC_JSON" ] || missing="$missing CLASPRC_JSON"
+          [ -n "$SCRIPT_ID" ] || missing="$missing SCRIPT_ID"
+          if [ -n "$missing" ]; then
+            echo "Missing repository secret(s):$missing"
+            echo "See docs/DEPLOY.md for how to create them."
+            exit 1
+          fi
+
+      - name: Install clasp
+        run: npm install -g @google/clasp@2.4.2
+
+      - name: Write clasp credentials
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+          SCRIPT_ID: ${{ secrets.SCRIPT_ID }}
+        run: |
+          printf '%s' "$CLASPRC_JSON" > "$HOME/.clasprc.json"
+          printf '{"scriptId":"%s","rootDir":"."}' "$SCRIPT_ID" > .clasp.json
+
+      - name: Push to Apps Script
+        run: clasp push --force
+
+      - name: Remove credentials
+        if: always()
+        run: rm -f "$HOME/.clasprc.json" .clasp.json

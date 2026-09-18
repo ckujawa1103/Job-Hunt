@@ -1,0 +1,5 @@
+# clasp pushes only what is NOT ignored here.
+# Everything is ignored by default, then the Apps Script sources are re-included.
+**/**
+!appsscript.json
+!src/**/*.js

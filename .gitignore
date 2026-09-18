@@ -1,0 +1,6 @@
+# Written by the deploy workflow from repository secrets; never commit either.
+.clasp.json
+.clasprc.json
+
+node_modules/
+.DS_Store
