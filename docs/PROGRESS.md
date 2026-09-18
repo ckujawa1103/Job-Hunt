@@ -12,6 +12,22 @@ config, logging**.
 
 ---
 
+## Two things to fix first
+
+1. **This repository is public.** Hard rule 4 says it must be private, because
+   `config/profile.md` is resume content — name, town, employers and dates.
+   Session 0's commit is already pushed, so that content is public until the
+   visibility changes: **Settings -> General -> Danger Zone -> Change
+   visibility -> Make private**. That hides the history too. (Nothing secret
+   was committed — no keys, no tokens.)
+2. **There is no `main` branch.** The repository's default branch is
+   `claude/new-session-rdnh0e` and `main` does not exist, so the push-to-deploy
+   path in DEPLOY.md has nothing to trigger on. Either merge this branch into a
+   new `main` and make `main` the default, or say so and the workflow can key
+   off a different branch. Until then the Deploy workflow can still be run by
+   hand from the Actions tab on any branch (**Actions -> Deploy -> Run
+   workflow**), which is how step 5 of DEPLOY.md works today.
+
 ## Do these by hand (nothing else is blocked on me)
 
 Full instructions with screenshots-worth-of-detail are in
@@ -30,7 +46,8 @@ list:
 5. **Add two repository secrets** under Settings -> Secrets and variables ->
    Actions: `CLASPRC_JSON` (the file contents from step 4) and `SCRIPT_ID`
    (from step 2).
-6. **Push to `main`** and confirm the Deploy workflow is green.
+6. **Push to `main`** — see item 2 above; for now, run **Actions -> Deploy ->
+   Run workflow** by hand — and confirm the workflow is green.
 7. **Run `setupSheet` once** from the Apps Script editor and approve the OAuth
    consent screen. Confirm the five tabs appear, Config is filled in and
    Companies lists 24 rows at `verified=N`.
@@ -54,7 +71,7 @@ Nothing should change except the summary it returns.
 | `src/tests.js` | `runAllTests()`, `test_smoke()` and four more tests. |
 | `tools/gen_companies.js` | Regenerates the seed file; `--check` fails on drift. |
 | `tools/run_tests.js` | Runs the `test_*` functions locally in a sandbox. |
-| `.github/workflows/deploy.yml` | Checks on every push/PR; `clasp push` on `main`. |
+| `.github/workflows/deploy.yml` | Checks on every push/PR; `clasp push` on a push to `main` or on a manual run. |
 | `docs/DEPLOY.md`, `docs/SECRETS.md` | The manual steps and every credential. |
 
 `setupSheet()` is idempotent the careful way: it adds missing tabs, appends

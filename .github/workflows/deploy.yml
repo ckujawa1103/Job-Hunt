@@ -25,7 +25,8 @@ jobs:
   deploy:
     name: clasp push
     needs: checks
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    # Deploys on a push to main, or on demand from any branch via the Actions tab.
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
